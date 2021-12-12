@@ -1,4 +1,4 @@
-# SA:MP Map Stealer in luascript
+# SA:MP Map Stealer with moonloader
 
 **Available commands:**
 - /mapstealer (start or save stealing)
