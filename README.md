@@ -1,4 +1,4 @@
-# SA:MP Map Stealer with moonloader
+# SA:MP Map Stealer with moonloader API
 
 **Available commands:**
 - /mapstealer (start or save stealing)
