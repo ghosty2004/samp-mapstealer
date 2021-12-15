@@ -78,11 +78,18 @@ function main()
     while true do 
         wait(0);
         if(mapstealer) then 
-            local count = 0;
-            for key, value in pairs(objects) do count = count + 1; end
+            local objects_count = 0;
+            local materials_count = 0;
+            local materialstext_count = 0;
+
+            for key, value in pairs(objects) do 
+                if(value[1]) then for _ in pairs(value[1]) do objects_count = objects_count + 1; end  end 
+                if(value[2]) then for _ in pairs(value[2]) do materials_count = materials_count + 1; end end
+                if(value[3]) then for _ in pairs(value[3]) do materialstext_count = materialstext_count + 1; end end
+            end
             local positionX, positionY, positionZ = getCharCoordinates(PLAYER_PED);
             addOneOffSound(positionX, positionY, positionZ, 1058);
-            info(string.format("Recording...~n~Stealed objects: ~y~~h~%d", count), 1);
+            info(string.format("Recording...~w~~n~objects: ~y~~h~%d~w~, materials: ~y~~h~%d~w~, materials text: ~y~~h~%d", objects_count, materials_count, materialstext_count), 1);
         end 
     end 
 end
