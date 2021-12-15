@@ -26,12 +26,9 @@ function main()
             local materials_count = 0;
             local materialstext_count = 0;
 
-            local count = 0;
             local maps = {};
 
             for key, value in pairs(objects) do 
-                count = count + 1;
-
                 --[[ Objects ]]
                 if(value[1]) then
                     for key_object, value_object in pairs(value[1]) do 
@@ -114,8 +111,9 @@ function ev.onCreateObject(objectId, data)
                 table.insert(objects[count][1], string.format("%s", object_string));
                 labels[count] = sampCreate3dText(string.format("Object Info:\nID: %d | Model: %d", count, data.modelId), -1, data.position.x, data.position.y, data.position.z, data.drawDistance, true, -1, -1);
             end
-        end
+        end 
         temp_stream_data[objectId] = thisObjectSrcKey(object_string);
+        SCM(string.format("obj key: %d for: %s", temp_stream_data[objectId], object_string))
     end
 end 
 
@@ -203,8 +201,8 @@ function thisObjectSrcKey(src)
     local key_value = -1;
     for key, value in pairs(objects) do 
         if(value[1]) then
-            for key_object, value_object in pairs(value[1]) do 
-                if(src == value_object) then key_value = key_object; end
+            for _, value_object in pairs(value[1]) do 
+                if(src == value_object) then key_value = key; end
             end 
         end 
     end 
