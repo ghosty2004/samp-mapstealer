@@ -8,7 +8,7 @@ local mapstealer = false;
 local objects = {};
 local labels = {};
 local count = 0;
-local count_object_Id = {};
+local temp_stream_data = {};
 
 --[[ Main ]]
 function main()
@@ -99,29 +99,36 @@ function onExitScript(quitGame)
 end 
 
 --[[ Events ]]
+function ev.ononDestroyObject(objectId)
+     if(temp_stream_data[objectId]) then temp_stream_data[objectId] = -1; end
+end 
+
 function ev.onCreateObject(objectId, data)
     if(mapstealer) then
         local object_string = string.format("ghosty2004_map = CreateDynamicObject(%d, %f, %f, %f, %f, %f, %f, %d, %d, %d, %f, %f);", data.modelId, data.position.x, data.position.y, data.position.z, data.rotation.x, data.rotation.y, data.rotation.z, -1, -1, -1, 400, 400);
         if(not checkIfThisObjectSrcExists(object_string)) then
-            count = count + 1;
+            count = count + 1; 
             if(not objects[count]) then
-                count_object_Id[count] = objectId;
                 objects[count] = {};
                 objects[count][1] = {};
                 table.insert(objects[count][1], string.format("%s", object_string));
                 labels[count] = sampCreate3dText(string.format("Object Info:\nID: %d | Model: %d", count, data.modelId), -1, data.position.x, data.position.y, data.position.z, data.drawDistance, true, -1, -1);
             end
         end
+        temp_stream_data[objectId] = thisObjectSrcKey(object_string);
     end
 end 
 
 function ev.onSetObjectMaterial(objectId, data) 
     if(mapstealer) then
-        local index = getIndexByObjectId(objectId);
-        if(index ~= -1) then 
+        local index = temp_stream_data[objectId];
+        if(index ~= -1 and index) then 
             if(objects[index]) then
-                if(not objects[index][2]) then objects[index][2] = {}; end
-                table.insert(objects[index][2], string.format("SetDynamicObjectMaterial(ghosty2004_map, %d, %d, \"%s\", \"%s\", %d);", data.materialId, data.modelId, data.libraryName, data.textureName, data.color));
+                local material_string = string.format("SetDynamicObjectMaterial(ghosty2004_map, %d, %d, \"%s\", \"%s\", %d);", data.materialId, data.modelId, data.libraryName, data.textureName, data.color);
+                if(not isMaterialExists(index, material_string)) then 
+                    if(not objects[index][2]) then objects[index][2] = {}; end
+                    table.insert(objects[index][2], string.format("%s", material_string));
+                end
             end
         end
     end
@@ -129,11 +136,14 @@ end
 
 function ev.onSetObjectMaterialText(objectId, data)
     if(mapstealer) then
-        local index = getIndexByObjectId(objectId);
-        if(index ~= -1) then 
+        local index = temp_stream_data[objectId];
+        if(index ~= -1 and index) then 
             if(objects[index]) then
-                if(not objects[index][3]) then objects[index][3] = {}; end
-                table.insert(objects[index][3], string.format("%s", string.format("SetDynamicObjectMaterialText(ghosty2004_map, %d, \"%s\", %d, \"%s\", %d, %d, %d, %d, %d);", data.materialId, data.text, data.materialSize, data.fontName, data.fontSize, data.bold, data.fontColor, data.backGroundColor, data.align)));
+                local materialtext_string = string.format("SetDynamicObjectMaterialText(ghosty2004_map, %d, \"%s\", %d, \"%s\", %d, %d, %d, %d, %d);", data.materialId, data.text, data.materialSize, data.fontName, data.fontSize, data.bold, data.fontColor, data.backGroundColor, data.align);
+                if(not isMaterialTextExists(index, materialtext_string)) then
+                    if(not objects[index][3]) then objects[index][3] = {}; end
+                    table.insert(objects[index][3], string.format("%s", materialtext_string));
+                end
             end
         end
     end
@@ -161,10 +171,42 @@ function checkIfThisObjectSrcExists(src)
     return exists;
 end 
 
-function getIndexByObjectId(objectId) 
-    local index = -1;
-    for key, value in pairs(count_object_Id) do 
-        if(value == objectId) then index = key; end
-    end 
-    return index;
+function isMaterialExists(index, src)
+    local exists = false;
+    for key, value in pairs(objects) do 
+        if(value[2]) then
+            if(key == index) then
+                for key_object, value_material in pairs(value[2]) do 
+                    if(src == value_material) then exists = true; end
+                end
+            end
+        end
+    end
+    return exists;
 end 
+
+function isMaterialTextExists(index, src)
+    local exists = false;
+    for key, value in pairs(objects) do 
+        if(value[3]) then
+            if(key == index) then
+                for key_object, value_materialtext in pairs(value[3]) do 
+                    if(src == value_materialtext) then exists = true; end
+                end
+            end
+        end
+    end
+    return exists;
+end
+
+function thisObjectSrcKey(src)
+    local key_value = -1;
+    for key, value in pairs(objects) do 
+        if(value[1]) then
+            for key_object, value_object in pairs(value[1]) do 
+                if(src == value_object) then key_value = key_object; end
+            end 
+        end 
+    end 
+    return key_value;
+end
