@@ -113,7 +113,6 @@ function ev.onCreateObject(objectId, data)
             end
         end 
         temp_stream_data[objectId] = thisObjectSrcKey(object_string);
-        SCM(string.format("obj key: %d for: %s", temp_stream_data[objectId], object_string))
     end
 end 
 
