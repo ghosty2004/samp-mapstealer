@@ -96,7 +96,7 @@ function onExitScript(quitGame)
 end 
 
 --[[ Events ]]
-function ev.ononDestroyObject(objectId)
+function ev.onDestroyObject(objectId)
      if(temp_stream_data[objectId]) then temp_stream_data[objectId] = -1; end
 end 
 
