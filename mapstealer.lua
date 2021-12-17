@@ -6,7 +6,6 @@ local ev = require('samp.events');
 --[[ Variables ]]
 local mapstealer = false;
 local objects = {};
-local labels = {};
 local count = 0;
 local temp_stream_data = {};
 
@@ -54,7 +53,9 @@ function main()
 
             for key, value in pairs(maps) do map = string.format("%s\n%s", map, value); end 
 
-            for key, value in pairs(labels) do sampDestroy3dText(value); end 
+            for key, value in pairs(temp_stream_data) do 
+                if(value.label) then sampDestroy3dText(value.label); end 
+            end 
 
             SCM(string.format("Saved: %d objects, %d materials and %d materials text.", objects_count, materials_count, materialstext_count));
             
@@ -68,7 +69,7 @@ function main()
             file:close();
 
             objects = {};
-            labels = {};
+            temp_stream_data = {};
         end 
     end)
 
@@ -84,20 +85,22 @@ function main()
                 if(value[2]) then for _ in pairs(value[2]) do materials_count = materials_count + 1; end end
                 if(value[3]) then for _ in pairs(value[3]) do materialstext_count = materialstext_count + 1; end end
             end
-            local positionX, positionY, positionZ = getCharCoordinates(PLAYER_PED);
-            addOneOffSound(positionX, positionY, positionZ, 1058);
+
             info(string.format("Recording...~w~~n~objects: ~y~~h~%d~w~, materials: ~y~~h~%d~w~, materials text: ~y~~h~%d", objects_count, materials_count, materialstext_count), 1);
         end 
     end 
 end
 
 function onExitScript(quitGame) 
-    for key, value in pairs(labels) do sampDestroy3dText(value); end 
+    for key, value in pairs(temp_stream_data) do 
+        if(value.label) then sampDestroy3dText(value.label); end 
+    end 
 end 
 
 --[[ Events ]]
 function ev.onDestroyObject(objectId)
-     if(temp_stream_data[objectId]) then temp_stream_data[objectId] = -1; end
+    if(temp_stream_data[objectId]) then sampDestroy3dText(temp_stream_data[objectId].label); end
+    temp_stream_data[objectId] = {};
 end 
 
 function ev.onCreateObject(objectId, data)
@@ -109,22 +112,31 @@ function ev.onCreateObject(objectId, data)
                 objects[count] = {};
                 objects[count][1] = {};
                 table.insert(objects[count][1], string.format("%s", object_string));
-                labels[count] = sampCreate3dText(string.format("Object Info:\nID: %d | Model: %d", count, data.modelId), -1, data.position.x, data.position.y, data.position.z, data.drawDistance, true, -1, -1);
+                local positionX, positionY, positionZ = getCharCoordinates(PLAYER_PED);
+                addOneOffSound(positionX, positionY, positionZ, 1058);
             end
         end 
-        temp_stream_data[objectId] = thisObjectSrcKey(object_string);
+        temp_stream_data[objectId] = {
+            index = thisObjectSrcKey(object_string);
+            objectInfo = {
+                model = data.modelId;
+            },
+            label = sampCreate3dText("", -1, data.position.x, data.position.y, data.position.z, data.drawDistance, true, -1, -1);
+        }
+        updateThisLabel(thisObjectSrcKey(object_string));
     end
 end 
 
 function ev.onSetObjectMaterial(objectId, data) 
     if(mapstealer) then
-        local index = temp_stream_data[objectId];
+        local index = temp_stream_data[objectId].index;
         if(index ~= -1 and index) then 
             if(objects[index]) then
                 local material_string = string.format("SetDynamicObjectMaterial(ghosty2004_map, %d, %d, \"%s\", \"%s\", %d);", data.materialId, data.modelId, data.libraryName, data.textureName, data.color);
                 if(not isMaterialExists(index, material_string)) then 
                     if(not objects[index][2]) then objects[index][2] = {}; end
                     table.insert(objects[index][2], string.format("%s", material_string));
+                    updateThisLabel(index);
                 end
             end
         end
@@ -133,13 +145,14 @@ end
 
 function ev.onSetObjectMaterialText(objectId, data)
     if(mapstealer) then
-        local index = temp_stream_data[objectId];
+        local index = temp_stream_data[objectId].index;
         if(index ~= -1 and index) then 
             if(objects[index]) then
                 local materialtext_string = string.format("SetDynamicObjectMaterialText(ghosty2004_map, %d, \"%s\", %d, \"%s\", %d, %d, %d, %d, %d);", data.materialId, data.text, data.materialSize, data.fontName, data.fontSize, data.bold, data.fontColor, data.backGroundColor, data.align);
                 if(not isMaterialTextExists(index, materialtext_string)) then
                     if(not objects[index][3]) then objects[index][3] = {}; end
                     table.insert(objects[index][3], string.format("%s", materialtext_string));
+                    updateThisLabel(index);
                 end
             end
         end
@@ -156,6 +169,14 @@ function info(text, time)
     printStringNow(string.format("~r~~h~[Ghosty2004 Map Stealer] ~g~~h~%s", text), time)
 end 
 
+function updateThisLabel(labelIndex)
+    for key, value in pairs(temp_stream_data) do 
+        if(value.index == labelIndex) then 
+            sampSet3dTextString(value.label, string.format("Object Info:\nID: %s | Model: %s\nMaterials: %s | Materials Text: %s", value.index, value.objectInfo.model, getMaterialCount(value.index), getMaterialTextCount(value.index)));
+        end 
+    end
+end 
+
 function checkIfThisObjectSrcExists(src) 
     local exists = false;
     for key, value in pairs(objects) do 
@@ -166,6 +187,30 @@ function checkIfThisObjectSrcExists(src)
         end
     end
     return exists;
+end
+
+function getMaterialCount(index) 
+    local count = 0;
+    for key, value in pairs(objects) do 
+        if(value[2]) then
+            if(key == index) then
+                for _, value_material in pairs(value[2]) do count = count + 1; end
+            end 
+        end
+    end 
+    return count;
+end 
+
+function getMaterialTextCount(index) 
+    local count = 0;
+    for key, value in pairs(objects) do 
+        if(value[3]) then
+            if(key == index) then
+                for _, value_material in pairs(value[3]) do count = count + 1; end
+            end 
+        end
+    end 
+    return count;
 end 
 
 function isMaterialExists(index, src)
