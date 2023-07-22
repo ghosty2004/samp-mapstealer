@@ -1,4 +1,4 @@
-script_author('Ghosty2004');
+script_author('deep');
 
 --[[ Modules ]]
 local ev = require('samp.events');
@@ -88,8 +88,8 @@ function main()
 
             local ip, port = sampGetCurrentServerAddress();
 
-            createDirectory("ghosty2004_mapstealer");
-            local file = io.open(string.format("ghosty2004_mapstealer\\%s_%d.txt", ip, port), "w");
+            createDirectory("deepproject_mapstealer");
+            local file = io.open(string.format("deepproject_mapstealer\\%s_%d.txt", ip, port), "w");
             file:write(string.format("\n%s\n\n%s", header, map));
             file:close();
 
@@ -100,7 +100,7 @@ function main()
 
     while true do 
         wait(0);
-        if(mapstealer) then 
+        if(copy) then 
             --[[ Remove Building ]]
             local pPositionX, pPositionY, pPositionZ = getCharCoordinates(PLAYER_PED);
             for key, value in pairs(temp_remove_building_data) do
@@ -153,8 +153,8 @@ function ev.onDestroyObject(objectId)
 end 
 
 function ev.onCreateObject(objectId, data)
-    if(mapstealer) then
-        local object_string = string.format("ghosty2004_map = CreateDynamicObject(%d, %f, %f, %f, %f, %f, %f, %d, %d, %d, %f, %f);", data.modelId, data.position.x, data.position.y, data.position.z, data.rotation.x, data.rotation.y, data.rotation.z, -1, -1, -1, 400, 400);
+    if(copy) then
+        local object_string = string.format("deep_map = CreateDynamicObject(%d, %f, %f, %f, %f, %f, %f, %d, %d, %d, %f, %f);", data.modelId, data.position.x, data.position.y, data.position.z, data.rotation.x, data.rotation.y, data.rotation.z, -1, -1, -1, 400, 400);
         if(not checkIfThisObjectSrcExists(object_string)) then
             count = count + 1; 
             if(not objects[count]) then
@@ -177,11 +177,11 @@ function ev.onCreateObject(objectId, data)
 end 
 
 function ev.onSetObjectMaterial(objectId, data) 
-    if(mapstealer) then
+    if(copy) then
         local index = temp_stream_data[objectId].index;
         if(index ~= -1 and index) then 
             if(objects[index]) then
-                local material_string = string.format("SetDynamicObjectMaterial(ghosty2004_map, %d, %d, \"%s\", \"%s\", %d);", data.materialId, data.modelId, data.libraryName, data.textureName, data.color);
+                local material_string = string.format("SetDynamicObjectMaterial(deep_map, %d, %d, \"%s\", \"%s\", %d);", data.materialId, data.modelId, data.libraryName, data.textureName, data.color);
                 if(not isMaterialExists(index, material_string)) then 
                     if(not objects[index][2]) then objects[index][2] = {}; end
                     table.insert(objects[index][2], material_string);
@@ -193,11 +193,11 @@ function ev.onSetObjectMaterial(objectId, data)
 end 
 
 function ev.onSetObjectMaterialText(objectId, data)
-    if(mapstealer) then
+    if(copy) then
         local index = temp_stream_data[objectId].index;
         if(index ~= -1 and index) then 
             if(objects[index]) then
-                local materialtext_string = string.format("SetDynamicObjectMaterialText(ghosty2004_map, %d, \"%s\", %d, \"%s\", %d, %d, %d, %d, %d);", data.materialId, data.text, data.materialSize, data.fontName, data.fontSize, data.bold, data.fontColor, data.backGroundColor, data.align);
+                local materialtext_string = string.format("SetDynamicObjectMaterialText(deep_map, %d, \"%s\", %d, \"%s\", %d, %d, %d, %d, %d);", data.materialId, data.text, data.materialSize, data.fontName, data.fontSize, data.bold, data.fontColor, data.backGroundColor, data.align);
                 if(not isMaterialTextExists(index, materialtext_string)) then
                     if(not objects[index][3]) then objects[index][3] = {}; end
                     table.insert(objects[index][3], materialtext_string);
@@ -210,7 +210,7 @@ end
 
 --[[ Functions ]]
 function SCM(text)
-    tag = '{FF5656}[Ghosty2004 Map Stealer]: ';
+    tag = '{FF5656}[deep Project Map Stealer]: ';
     sampAddChatMessage(tag .. text, -1);
 end
 
