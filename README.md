@@ -1,5 +1,7 @@
 # SA:MP Map Stealer with moonloader API
 
+Remember to 🌟 this Github if you 💖 it.
+
 # Available commands
 - /mapstealer (start or save stealing)
 
